@@ -1,0 +1,39 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    .ttl { position: absolute; top: 370px; left: 0; right: 0; text-align: center; color: #fff;
+           font: 800 120px/1 "Inter", sans-serif; letter-spacing: -0.04em; }
+    .sub { position: absolute; top: 510px; left: 0; right: 0; text-align: center; color: #cfd9ff;
+           font: 700 44px/1.1 "Inter", sans-serif; }
+    .cap { position: absolute; left: 160px; right: 160px; top: 1260px; text-align: center; color: #fff;
+           font: 800 60px/1.15 "Inter", sans-serif; }
+    .y { color: #ffd43b; }
+    .hl { background: #ffd43b; color: #111; padding: 0 12px; border-radius: 10px; }
+    .tag { position: absolute; top: 290px; left: 0; right: 0; margin: 0 auto; width: max-content;
+           padding: 10px 26px; border-radius: 999px; background: #ffd43b; color: #111;
+           font: 800 40px/1.1 "Inter", sans-serif; }
+
+    #laidup-box { position: absolute; left: 150px; top: 620px; width: 780px; height: 600px; border-radius: 36px;
+                  background: linear-gradient(160deg, #3a2a20, #6b3a22 60%, #8a4a26); }
+    #laidup-years { position: absolute; left: 150px; width: 780px; top: 760px; text-align: center; color: #ffe9d6;
+                    font: 800 180px/1 "Inter", sans-serif; letter-spacing: -0.05em; }
+    #laidup-note { position: absolute; left: 150px; width: 780px; top: 990px; text-align: center; color: #f3c9a8;
+                   font: 700 46px/1.2 "Inter", sans-serif; }
+  </style>
+  <div id="root" data-composition-id="laidup" data-width="1080" data-height="1920">
+    <h1 id="laidup-ttl" class="ttl clip" data-start="0" data-duration="6.174">Retired</h1>
+    <div id="laidup-box" class="clip" data-start="0" data-duration="6.174"></div>
+    <div id="laidup-years" class="clip" data-start="0" data-duration="6.174">1969</div>
+    <p id="laidup-note" class="clip" data-start="0.6" data-duration="5.774">still laid up</p>
+    <p id="laidup-cap" class="cap clip" data-start="0" data-duration="6.174">Half a century, <span class="y">rusting</span> at a pier.</p>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#laidup-ttl", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.32, ease: "back.out(2.2)" }, 0);
+    tl.fromTo("#laidup-box", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 0);
+    (() => { const o = { v: 1969 }, el = document.querySelector("#laidup-years"); tl.fromTo(o, { v: 1969 }, { v: 2024, duration: 4.6, ease: "power2.out", onUpdate: () => { el.textContent = o.v.toFixed(0) + ""; } }, 0.4); })();
+    tl.fromTo("#laidup-note", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 0.6);
+    tl.fromTo("#laidup-cap", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 0.1);
+    window.__timelines["laidup"] = tl;
+  </script>
+</template>

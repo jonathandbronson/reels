@@ -1,0 +1,38 @@
+[
+  {
+    "scene": "hook",
+    "text": "In 1952, she was the fastest ocean liner ever built.",
+    "start": 0.0,
+    "duration": 4.736
+  },
+  {
+    "scene": "record",
+    "text": "Nine hundred ninety feet long, she crossed the Atlantic at over thirty-five knots, a record no liner has beaten since.",
+    "start": 5.086,
+    "duration": 8.107
+  },
+  {
+    "scene": "laidup",
+    "text": "Retired in 1969, she spent the next half century rusting at a pier.",
+    "start": 13.543,
+    "duration": 5.824
+  },
+  {
+    "scene": "flood",
+    "text": "On November eleventh, 2026, off Destin, Florida, crews sank her. No explosives. Just water.",
+    "start": 19.717,
+    "duration": 7.509
+  },
+  {
+    "scene": "down",
+    "text": "After a stubborn valve held things up, she settled level and slipped under.",
+    "start": 27.576,
+    "duration": 4.587
+  },
+  {
+    "scene": "reef",
+    "text": "She landed upright, a hundred eighty feet down. The world's largest artificial reef.",
+    "start": 32.513,
+    "duration": 5.888
+  }
+]

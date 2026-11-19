@@ -1,0 +1,35 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    .ttl { position: absolute; top: 370px; left: 0; right: 0; text-align: center; color: #fff;
+           font: 800 120px/1 "Inter", sans-serif; letter-spacing: -0.04em; }
+    .sub { position: absolute; top: 510px; left: 0; right: 0; text-align: center; color: #cfd9ff;
+           font: 700 44px/1.1 "Inter", sans-serif; }
+    .cap { position: absolute; left: 160px; right: 160px; top: 1260px; text-align: center; color: #fff;
+           font: 800 60px/1.15 "Inter", sans-serif; }
+    .y { color: #ffd43b; }
+    .hl { background: #ffd43b; color: #111; padding: 0 12px; border-radius: 10px; }
+    .tag { position: absolute; top: 290px; left: 0; right: 0; margin: 0 auto; width: max-content;
+           padding: 10px 26px; border-radius: 999px; background: #ffd43b; color: #111;
+           font: 800 40px/1.1 "Inter", sans-serif; }
+
+    #down-gauge { position: absolute; right: 40px; top: 620px; width: 18px; height: 600px; border-radius: 9px; background: rgba(255,255,255,.25); }
+    #down-fill { width: 100%; height: 100%; border-radius: 9px; background: #ffd43b; transform-origin: top center; }
+  </style>
+  <div id="root" data-composition-id="down" data-width="1080" data-height="1920">
+    <div id="down-tag" class="tag clip" data-start="0" data-duration="4.937">A stuck valve. Then…</div>
+    <h1 id="down-ttl" class="ttl clip" data-start="0" data-duration="4.937">0 ft</h1>
+    <p id="down-sub" class="sub clip" data-start="0" data-duration="4.937">settling level</p>
+    <div id="down-gauge" class="clip" data-start="0" data-duration="4.937"><div id="down-fill"></div></div>
+    <p id="down-cap" class="cap clip" data-start="0" data-duration="4.937">She settled <span class="y">level</span> and slipped under.</p>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#down-tag", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 0);
+    (() => { const o = { v: 0 }, el = document.querySelector("#down-ttl"); tl.fromTo(o, { v: 0 }, { v: 180, duration: 3.9, ease: "power2.out", onUpdate: () => { el.textContent = o.v.toFixed(0) + " ft"; } }, 0.8); })();
+    tl.fromTo("#down-sub", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 0.2);
+    tl.fromTo("#down-fill", { scaleY: 0 }, { scaleY: 1, duration: 3.9, ease: "power2.out" }, 0.8);
+    tl.fromTo("#down-cap", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 0.1);
+    window.__timelines["down"] = tl;
+  </script>
+</template>

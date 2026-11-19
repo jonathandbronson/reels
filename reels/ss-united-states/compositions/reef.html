@@ -1,0 +1,31 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    .ttl { position: absolute; top: 370px; left: 0; right: 0; text-align: center; color: #fff;
+           font: 800 120px/1 "Inter", sans-serif; letter-spacing: -0.04em; }
+    .sub { position: absolute; top: 510px; left: 0; right: 0; text-align: center; color: #cfd9ff;
+           font: 700 44px/1.1 "Inter", sans-serif; }
+    .cap { position: absolute; left: 160px; right: 160px; top: 1260px; text-align: center; color: #fff;
+           font: 800 60px/1.15 "Inter", sans-serif; }
+    .y { color: #ffd43b; }
+    .hl { background: #ffd43b; color: #111; padding: 0 12px; border-radius: 10px; }
+    .tag { position: absolute; top: 290px; left: 0; right: 0; margin: 0 auto; width: max-content;
+           padding: 10px 26px; border-radius: 999px; background: #ffd43b; color: #111;
+           font: 800 40px/1.1 "Inter", sans-serif; }
+
+  </style>
+  <div id="root" data-composition-id="reef" data-width="1080" data-height="1920">
+    <div id="reef-tag" class="tag clip" data-start="0.2" data-duration="2.1">Landed upright · 180 ft</div>
+    <h1 id="reef-ttl" class="ttl clip" data-start="2.4" data-duration="4.387" style="font-size:84px;top:330px">World's largest<br/>artificial reef</h1>
+    <p id="reef-sub" class="sub clip" data-start="3.2" data-duration="3.587" style="top:1130px;font-size:38px">Top deck ≈ 55 ft down · open to divers</p>
+    <p id="reef-cap" class="cap clip" data-start="0" data-duration="6.788">Her <span class="hl">new life</span> starts on the seafloor.</p>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#reef-tag", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 0.2);
+    tl.fromTo("#reef-ttl", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.32, ease: "back.out(2.2)" }, 2.4);
+    tl.fromTo("#reef-sub", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 3.2);
+    tl.fromTo("#reef-cap", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 0.1);
+    window.__timelines["reef"] = tl;
+  </script>
+</template>
