@@ -13,23 +13,25 @@ total = round(sum(slots[s][1] for s in slots), 3)
 vo_len = round(t[-1]["start"] + t[-1]["duration"], 3)
 
 # Shots: (id, src, scene, media_start, clip_seconds_used)
+# Full-screen HQ shots (tools/blender/ssus_hq.py), one per scene, played at normal speed.
 SHOTS = [
-    ("shot-hook", "sail.mp4", "hook", 0.0, 1.0),
-    ("shot-record", "sail.mp4", "record", 0.6, 1.4),
-    ("shot-flood", "sink.mp4", "flood", 0.0, 0.9),
-    ("shot-down", "sink.mp4", "down", 0.9, 0.65),
-    ("shot-reef", "seafloor.mp4", "reef", 0.0, 1.66),
+    ("shot-hook", "hq/hero.mp4", "hook"),
+    ("shot-record", "hq/side.mp4", "record"),
+    ("shot-laidup", "hq/pier.mp4", "laidup"),
+    ("shot-flood", "hq/flood.mp4", "flood"),
+    ("shot-down", "hq/sink.mp4", "down"),
+    ("shot-reef", "hq/reef.mp4", "reef"),
 ]
 
 out = []
 lane = 0
-for sid, src, scene, ms, used in SHOTS:
+for sid, src, scene in SHOTS:
     start, dur = slots[scene]
-    rate = round(used / dur, 3)
     out.append(
         f'      <video id="{sid}" class="clip shot" src="assets/blender/{src}" muted data-start="{start}" '
-        f'data-duration="{dur}" data-media-start="{ms}" data-playback-rate="{rate}" data-track-index="0"></video>'
+        f'data-duration="{dur}" data-track-index="0"></video>'
     )
+out.append(f'      <div id="scrim" class="clip" data-start="0" data-duration="{total}" data-track-index="5"></div>')
 for scene, (start, dur) in slots.items():
     out.append(
         f'      <div id="{scene}" data-composition-id="{scene}" class="scene clip" '
@@ -49,9 +51,12 @@ html = f"""<!doctype html>
     <script src="assets/vendor/gsap.min.js"></script>
     <style>
       * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-      html, body {{ width: 1080px; height: 1920px; overflow: hidden; background: #1d3fd8; }}
+      html, body {{ width: 1080px; height: 1920px; overflow: hidden; background: #000; }}
       #root {{ position: relative; width: 100%; height: 100%; font-family: "Inter", sans-serif; }}
-      .shot {{ position: absolute; left: 150px; top: 620px; width: 780px; height: 600px; object-fit: cover; border-radius: 36px; }}
+      .shot {{ position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }}
+      #scrim {{ position: absolute; inset: 0; z-index: 1; pointer-events: none;
+               background: linear-gradient(to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 56%, rgba(0,0,0,.65) 82%, rgba(0,0,0,.75) 100%); }}
+      .scene {{ z-index: 2; }}
       .scene {{ position: absolute; inset: 0; }}
     </style>
   </head>
