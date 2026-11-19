@@ -1,0 +1,8 @@
+node_modules/
+reels/*/renders/
+reels/*/.hyperframes/
+reels/*/assets/source/voice/*.wav
+reels/*/assets/source/voice/*.mp3
+reels/*/assets/blender/*.png
+__pycache__/
+.env

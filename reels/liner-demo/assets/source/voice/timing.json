@@ -1,0 +1,20 @@
+[
+  {
+    "scene": "hook",
+    "text": "This nine-hundred-ninety-foot ocean liner is about to sink.",
+    "start": 0.0,
+    "duration": 4.032
+  },
+  {
+    "scene": "flood",
+    "text": "Water pours into the bow, and she starts to tip.",
+    "start": 4.382,
+    "duration": 3.157
+  },
+  {
+    "scene": "payoff",
+    "text": "Every scene you see was animated in code.",
+    "start": 7.889,
+    "duration": 2.645
+  }
+]
