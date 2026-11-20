@@ -1,8 +1,13 @@
 """SS United States — high-quality shots, built entirely in code.
 
-Usage:
-  python3 tools/blender/ssus_hq.py <shot> <out.mp4> --seconds 5.1 [--fps 24] [--res 720x1280]
-         [--samples 24] [--still FRAME.png]   (--still renders one frame for look-dev)
+Usage (via the wrapper, which runs Blender headless on the GPU when available):
+  python tools/render_shot.py tools/blender/ssus_hq.py <shot> <out.mp4> --seconds 5.1
+         [--engine eevee|cycles] [--fps 24] [--res 1080x1920] [--samples N] [--still FRAME.png]
+
+  --engine eevee   fast, uses any GPU (Intel Arc, AMD, NVIDIA, Apple). Default.
+  --engine cycles  path-traced; uses OptiX/CUDA/HIP/oneAPI/Metal if Blender finds a GPU, else CPU.
+  --fps            below 24, frames are motion-interpolated up to 24 (saves render time).
+  --still          renders one frame (at --at, 0-1 through the shot) for look-dev.
 
 Shots:
   hero      aerial chase at speed, low golden sun, wake            (hook)
@@ -19,16 +24,20 @@ from pathlib import Path
 import bpy, bmesh
 from mathutils import Vector
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from common import script_args, ffmpeg  # noqa: E402
+
 ap = argparse.ArgumentParser()
 ap.add_argument("shot", choices=["hero", "side", "pier", "flood", "sink", "reef"])
 ap.add_argument("out")
 ap.add_argument("--seconds", type=float, default=5.0)
 ap.add_argument("--fps", type=int, default=24)
-ap.add_argument("--res", default="720x1280")
-ap.add_argument("--samples", type=int, default=24)
+ap.add_argument("--res", default="1080x1920")
+ap.add_argument("--engine", choices=["eevee", "cycles"], default="eevee")
+ap.add_argument("--samples", type=int, default=0, help="0 = engine default (eevee 64, cycles 24)")
 ap.add_argument("--still", default=None, help="render only this fraction of the shot (0-1) to a PNG")
 ap.add_argument("--at", type=float, default=0.5)
-a = ap.parse_args(sys.argv[1:])
+a = ap.parse_args(script_args())
 random.seed(7)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -292,17 +301,58 @@ funnel(-1.6, CUT_FUNNELS)
 funnel(3.6, CUT_FUNNELS)
 
 # ----------------------------------------------------------------- world
-S.render.engine = "CYCLES"
-S.cycles.device = "CPU"
-S.cycles.samples = a.samples
-S.cycles.use_adaptive_sampling = True
-S.cycles.adaptive_threshold = 0.04
-S.cycles.use_denoising = True
-S.cycles.max_bounces = 4
-S.cycles.diffuse_bounces = 2
-S.cycles.glossy_bounces = 2
-S.cycles.transmission_bounces = 2
-S.cycles.caustics_reflective = S.cycles.caustics_refractive = False
+
+
+def use_gpu_for_cycles():
+    """Pick the best Cycles GPU backend Blender reports; returns a description."""
+    try:
+        prefs = bpy.context.preferences.addons["cycles"].preferences
+    except Exception:
+        return "CPU (no Cycles preferences)"
+    for kind in ("OPTIX", "CUDA", "HIP", "ONEAPI", "METAL"):
+        try:
+            prefs.compute_device_type = kind
+        except TypeError:
+            continue
+        prefs.get_devices()
+        gpus = [d for d in prefs.devices if d.type == kind]
+        if gpus:
+            for d in prefs.devices:
+                d.use = d.type == kind
+            S.cycles.device = "GPU"
+            return f"{kind}: " + ", ".join(d.name for d in gpus)
+    S.cycles.device = "CPU"
+    return "CPU"
+
+
+if a.engine == "cycles":
+    S.render.engine = "CYCLES"
+    print("cycles device:", use_gpu_for_cycles())
+    S.cycles.samples = a.samples or 24
+    S.cycles.use_adaptive_sampling = True
+    S.cycles.adaptive_threshold = 0.04
+    S.cycles.use_denoising = True
+    S.cycles.max_bounces = 4
+    S.cycles.diffuse_bounces = 2
+    S.cycles.glossy_bounces = 2
+    S.cycles.transmission_bounces = 2
+    S.cycles.caustics_reflective = S.cycles.caustics_refractive = False
+else:
+    engines = [e.identifier for e in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items]
+    S.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in engines else "BLENDER_EEVEE"
+    ee = S.eevee
+    ee.taa_render_samples = a.samples or 64
+    for attr, val in (("use_raytracing", True), ("use_shadows", True), ("use_volumetric_shadows", True),
+                      ("shadow_ray_count", 2), ("shadow_step_count", 8), ("volumetric_tile_size", "4"),
+                      ("volumetric_samples", 96), ("use_gtao", True), ("use_bloom", False)):
+        if hasattr(ee, attr):
+            try:
+                setattr(ee, attr, val)
+            except Exception:
+                pass
+    if hasattr(ee, "ray_tracing_options"):
+        ee.ray_tracing_options.resolution_scale = "1"
+    print("engine:", S.render.engine)
 S.render.use_persistent_data = True
 S.view_settings.view_transform = "AgX"
 S.view_settings.look = "AgX - Medium High Contrast"
@@ -533,8 +583,9 @@ else:  # reef
     vbox = bpy.context.object
     vbox.scale = (140, 140, 15)
     vbox.data.materials.append(vm)
-    S.cycles.volume_bounces = 1
-    S.cycles.volume_step_rate = 4
+    if a.engine == "cycles":
+        S.cycles.volume_bounces = 1
+        S.cycles.volume_step_rate = 4
     sand, nt, b = node_mat("sand")
     b.inputs["Base Color"].default_value = (0.2, 0.18, 0.13, 1)
     b.inputs["Roughness"].default_value = 0.95
@@ -583,8 +634,11 @@ bpy.ops.render.render(animation=True)
 out = Path(a.out).resolve()
 out.parent.mkdir(parents=True, exist_ok=True)
 # Upscale to 1080x1920 (lanczos) and encode
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", str(tmp / "f_%04d.png"),
-                "-vf", "minterpolate=fps=24:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,scale=1080:1920:flags=lanczos", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+vf = "scale=1080:1920:flags=lanczos"
+if FPS < 24:  # fill in frames with motion interpolation
+    vf = "minterpolate=fps=24:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1," + vf
+subprocess.run([ffmpeg(), "-v", "error", "-y", "-framerate", str(FPS), "-i", str(tmp / "f_%04d.png"),
+                "-vf", vf, "-c:v", "libx264", "-pix_fmt", "yuv420p",
                 "-crf", "14", "-preset", "slow", str(out)], check=True)
 shutil.rmtree(tmp)
 print("wrote", out)

@@ -1,6 +1,6 @@
 """Example 3D shot built entirely in code: an ocean liner settling bow-first.
 
-Usage: python3 tools/blender/liner.py <out.mp4> [--frames 72] [--res 540x960] [--samples 16]
+Usage: python tools/render_shot.py tools/blender/liner.py <out.mp4> [--frames 72] [--res 540x960] [--samples 16]
 
 Runs Blender as a Python module (pip install bpy); no Blender app or GPU needed.
 Copy this file as a starting point for other shots: build objects, keyframe them, render.
@@ -15,7 +15,7 @@ ap.add_argument("--frames", type=int, default=72)
 ap.add_argument("--fps", type=int, default=24)
 ap.add_argument("--res", default="540x960")
 ap.add_argument("--samples", type=int, default=16)
-a = ap.parse_args(sys.argv[1:])
+a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -103,7 +103,7 @@ bpy.ops.render.render(animation=True)
 
 out = Path(a.out).resolve()
 out.parent.mkdir(parents=True, exist_ok=True)
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(a.fps), "-i", str(tmp / "f_%04d.png"),
+subprocess.run([shutil.which("ffmpeg") or "ffmpeg", "-v", "error", "-y", "-framerate", str(a.fps), "-i", str(tmp / "f_%04d.png"),
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", str(out)], check=True)
 shutil.rmtree(tmp)
 print("wrote", out)

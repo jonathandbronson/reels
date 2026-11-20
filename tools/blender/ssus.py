@@ -1,6 +1,6 @@
 """SS United States shots, built in code.
 
-Usage: python3 tools/blender/ssus.py <mode> <out.mp4> [--frames 48] [--res 540x960] [--samples 12]
+Usage: python tools/render_shot.py tools/blender/ssus.py <mode> <out.mp4> [--frames 48] [--res 540x960] [--samples 12]
   mode = sail     liner steaming at speed, camera tracking alongside
          sink     funnels removed, liner flooding and settling level into the sea
          seafloor liner resting upright on the sand, underwater, camera drifting
@@ -16,7 +16,7 @@ ap.add_argument("--frames", type=int, default=48)
 ap.add_argument("--fps", type=int, default=24)
 ap.add_argument("--res", default="540x960")
 ap.add_argument("--samples", type=int, default=12)
-a = ap.parse_args(sys.argv[1:])
+a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -170,7 +170,7 @@ scene.render.image_settings.file_format = "PNG"
 bpy.ops.render.render(animation=True)
 out = Path(a.out).resolve()
 out.parent.mkdir(parents=True, exist_ok=True)
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(a.fps), "-i", str(tmp / "f_%04d.png"),
+subprocess.run([shutil.which("ffmpeg") or "ffmpeg", "-v", "error", "-y", "-framerate", str(a.fps), "-i", str(tmp / "f_%04d.png"),
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", str(out)], check=True)
 shutil.rmtree(tmp)
 print("wrote", out)

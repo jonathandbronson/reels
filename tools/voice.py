@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Voice a reel's script.md, one clip per scene line.
 
-Usage: python3 tools/voice.py reels/<slug> [--voice am_michael]
+Usage: python tools/voice.py reels/<slug> [--voice am_michael]
 
 Uses ElevenLabs when ELEVENLABS_API_KEY is set (voice id from ELEVENLABS_VOICE_ID),
 otherwise the free local Kokoro voice bundled with HyperFrames.
@@ -13,13 +13,14 @@ Writes:
 """
 import argparse, json, os, re, subprocess, sys, urllib.request
 from pathlib import Path
+from common import ffmpeg, npx, duration
 
 GAP = 0.35  # silence between lines, seconds
 LINE = re.compile(r"^\s*-\s*\[([\w-]+)\]\s*(.+?)\s*$")
 
 
 def parse_script(path: Path):
-    lines = [LINE.match(l) for l in path.read_text().splitlines()]
+    lines = [LINE.match(l) for l in path.read_text(encoding="utf-8").splitlines()]
     out = [(m[1], m[2]) for m in lines if m]
     if not out:
         sys.exit(f"{path}: no '- [scene] text' lines found")
@@ -35,19 +36,16 @@ def eleven(text: str, dest: Path):
     )
     mp3 = dest.with_suffix(".mp3")
     mp3.write_bytes(urllib.request.urlopen(req, timeout=120).read())
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", mp3, "-ar", "24000", "-ac", "1", dest], check=True)
+    subprocess.run([ffmpeg(), "-v", "error", "-y", "-i", str(mp3), "-ar", "24000", "-ac", "1", str(dest)], check=True)
     mp3.unlink()
 
 
 def kokoro(text: str, dest: Path, voice: str, cwd: Path):
-    subprocess.run(["npx", "hyperframes", "tts", text, "-v", voice, "-o", str(dest)],
-                   check=True, cwd=cwd, stdout=subprocess.DEVNULL)
+    subprocess.run([npx(), "hyperframes", "tts", text, "-v", voice, "-o", str(dest)],
+                   check=True, cwd=cwd, stdout=subprocess.DEVNULL,
+                   env=dict(os.environ, HYPERFRAMES_TELEMETRY_DISABLED="1"))
 
 
-def duration(path: Path) -> float:
-    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                          "-of", "csv=p=0", path], capture_output=True, text=True, check=True)
-    return float(out.stdout)
 
 
 def main():
@@ -81,9 +79,9 @@ def main():
         inputs += ["-i", str(p)]
         filt += f"[{i}:a]aresample=24000,aformat=channel_layouts=mono,apad=pad_dur={GAP}[a{i}];"
     filt += "".join(f"[a{i}]" for i in range(len(parts))) + f"concat=n={len(parts)}:v=0:a=1[out]"
-    subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", filt,
+    subprocess.run([ffmpeg(), "-v", "error", "-y", *inputs, "-filter_complex", filt,
                     "-map", "[out]", str(vdir / "vo.wav")], check=True)
-    (vdir / "timing.json").write_text(json.dumps(timing, indent=2))
+    (vdir / "timing.json").write_text(json.dumps(timing, indent=2), encoding="utf-8")
     print(f"total {t:.2f}s → {vdir/'vo.wav'}, timing.json")
 
 
