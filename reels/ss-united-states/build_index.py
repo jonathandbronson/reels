@@ -55,7 +55,7 @@ html = f"""<!doctype html>
       #root {{ position: relative; width: 100%; height: 100%; font-family: "Inter", sans-serif; }}
       .shot {{ position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }}
       #scrim {{ position: absolute; inset: 0; z-index: 1; pointer-events: none;
-               background: linear-gradient(to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 56%, rgba(0,0,0,.65) 82%, rgba(0,0,0,.75) 100%); }}
+               background: linear-gradient(to bottom, rgba(0,0,0,.72) 0%, rgba(0,0,0,.45) 22%, rgba(0,0,0,0) 38%, rgba(0,0,0,0) 56%, rgba(0,0,0,.65) 82%, rgba(0,0,0,.75) 100%); }}
       .scene {{ z-index: 2; }}
       .scene {{ position: absolute; inset: 0; }}
     </style>
